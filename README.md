@@ -38,13 +38,13 @@ npm init -y
 
 We will install two packages:
 
-* **openai** – lets you connect to the AI model
+* **@google/genai** – lets you connect to the AI model
 * **dotenv** – loads your API key from a secure file
 
 Run:
 
 ```bash
-npm install openai dotenv
+npm install @google/genai dotenv
 ```
 
 ---
@@ -60,10 +60,10 @@ touch .env
 Inside `.env`, add:
 
 ```env
-OPENAI_API_KEY=your_api_key_here
+GOOGLE_API_KEY=your_api_key_here
 ```
 
-Go to https://platform.openai.com/api-keys to get an API key. Organization name can be 'Personal' and you can select 'Student'. You can skip 'Adding Team Members'. You can call your API Key "StoryJokeAPI". Copy key and add to your env file.
+Go to https://ai.google.dev/gemini-api/docs/api-key to get an API key. You can call your API Key "StoryJokeAPI". Copy key and add to your env file.
 
 **Important:** Never share your API key or upload it to GitHub.
 
@@ -76,81 +76,74 @@ Make the main JavaScript file:
 ```bash
 touch index.js
 ```
+Let's look at the docs! https://ai.google.dev/gemini-api/docs
 
 Paste this code inside:
 
 ```js
 // index.js
 
-require("dotenv").config();
-const OpenAI = require("openai");
-const readline = require("readline");
+import { GoogleGenAI } from "@google/genai";
+import dotenv from "dotenv";
+dotenv.config();
+import readline from "readline";
 
-// 1. Create AI client using your API key
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-// 2. Simple helper for CLI input
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-
-// Wrap readline in a Promise so we can use async/await
-function askQuestion(questionText) {
-  return new Promise((resolve) => {
-    rl.question(questionText, (answer) => resolve(answer));
+  // 1. Create AI client using your API key
+  const client = new GoogleGenAI({
+      apiKey: process.env.GOOGLE_API_KEY,
   });
-}
 
-async function main() {
-  try {
-    console.log("🤖 Welcome to the AI Joke & Story Bot!\n");
+  // 2. Simple helper for CLI input
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
 
-    const name = await askQuestion("What is your name? ");
-    const mood = await askQuestion("How are you feeling today? ");
-
-    console.log("\nThinking of something fun for you...\n");
-
-    // 3. Call the AI API
-    const response = await client.chat.completions.create({
-      model: "gpt-4.1-mini", 
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a playful, kind storyteller for software developers. " +
-            "You keep responses short, fun, and encouraging.",
-        },
-        {
-          role: "user",
-          content: `My name is ${name} and I am feeling ${mood}. 
-          Please respond with either:
-          - a short, funny programming-themed joke, OR
-          - a 3–4 sentence mini-story about me learning to code.
-          
-          Make it positive, encouraging, and friendly for all.`,
-        },
-      ],
-      max_tokens: 200,
-      temperature: 0.9,
+  // Wrap readline in a Promise so we can use async/await
+  function askQuestion(questionText) {
+    return new Promise((resolve) => {
+      rl.question(questionText, (answer) => resolve(answer));
     });
-
-    const aiMessage = response.choices[0].message.content;
-
-    console.log("✨ Here’s your custom AI message:\n");
-    console.log(aiMessage);
-  } catch (err) {
-    console.error("Oops! Something went wrong:", err.message);
-  } finally {
-    rl.close();
   }
+  
+  async function main() {
+    try {
+      console.log("🤖 Welcome to the AI Joke & Story Bot!\n");
+
+      const name = await askQuestion("What is your name? ");
+      const mood = await askQuestion("How are you feeling today? ");
+
+      console.log("\nThinking of something fun for you...\n");
+
+      // 3. Call the AI API
+      const response = await client.models.generateContent({
+        model: "gemini-3-flash-preview",
+        config: {
+          systemInstruction: "You are a playful, kind storyteller for software developers. You keep responses short, fun, and encouraging.",
+          temperature: 0.9,
+          // maxOutputTokens: 200,
+        },
+        contents: `My name is ${name} and I am feeling ${mood}. 
+            Please respond with either:
+            - a short, funny programming-themed joke, OR
+            - a 3–4 sentence mini-story about me learning to code.
+            
+            Make it positive, encouraging, and friendly for all.`,
+      });
+
+      let aiMessage = response.text;
+
+      console.log("✨ Here’s your custom AI message:\n");
+      console.log(aiMessage);
+    } catch (err) {
+      console.error("Oops! Something went wrong:", err.message);
+    } finally {
+      rl.close();
+    }
 }
 
 main();
 ```
-Let's look at the docs! https://platform.openai.com/docs/guides/text
 ---
 
 ## **▶️ Run the App**
