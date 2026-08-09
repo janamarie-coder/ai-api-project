@@ -1,0 +1,16 @@
+{
+  "name": "ai-joke-bot",
+  "version": "1.0.0",
+  "description": "A small Node.js app that asks for your name and mood, then uses Gemini to generate a short joke or mini-story.",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "server": "node server.js"
+  },
+  "dependencies": {
+    "@google/genai": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}
